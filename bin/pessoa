@@ -1,0 +1,222 @@
+#!/usr/bin/env bash
+#
+# pessoa — 写作异名框架 CLI
+# 命名源自费尔南多·佩索阿（Fernando Pessoa）及其 70 余个异名。
+# 当前命令：pessoa init
+#
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+FRAMEWORK_DIR="$SCRIPT_DIR/../framework"
+LOGO_FILE="$FRAMEWORK_DIR/assets/logo.sh"
+# shellcheck source=../framework/assets/logo.sh
+source "$LOGO_FILE"
+
+# ---------------------------------------------------------------------------
+# 工具定义（bash 3.2 兼容，不使用关联数组）
+# ---------------------------------------------------------------------------
+skills_rel() {
+  case "$1" in
+    opencode) echo ".opencode/skills" ;;
+    claude)   echo ".claude/skills" ;;
+    cursor)   echo ".cursor/skills" ;;
+  esac
+}
+commands_rel() {
+  case "$1" in
+    opencode) echo ".opencode/command" ;;
+    claude)   echo ".claude/commands" ;;
+    cursor)   echo ".cursor/commands" ;;
+  esac
+}
+
+SKILLS=("pessoa-blog" "pessoa-article" "pessoa-paper" "pessoa-train")
+
+# ---------------------------------------------------------------------------
+# 欢迎界面（左侧钢笔 LOGO + 右侧文案）
+# ---------------------------------------------------------------------------
+print_welcome() {
+  local -a TEXT=(
+    "pessoa · 写作异名框架"
+    "费尔南多·佩索阿的 70 余个分身，"
+    "在此化作你的写作技能。"
+    ""
+    "请选择目标 Agentic Coding Tool："
+    "  [1] OpenCode"
+    "  [2] Claude Code"
+    "  [3] Cursor"
+    "  （可多选，空格或逗号分隔，如 1 2 3）"
+    ""
+    "安装范围："
+    "  [u] 用户级（全局 ~/.xxx，默认）"
+    "  [p] 项目级（当前目录 .xxx/）"
+  )
+  clear
+  local max=${#LOGO[@]}
+  local tlen=${#TEXT[@]}
+  (( tlen > max )) && max=$tlen
+  local logo_w=12
+  for ((i = 0; i < max; i++)); do
+    local l="${LOGO[$i]:-}"
+    local t="${TEXT[$i]:-}"
+    printf "%-*s   %s\n" "$logo_w" "$l" "$t"
+  done
+  echo
+}
+
+# ---------------------------------------------------------------------------
+# 选择工具
+# ---------------------------------------------------------------------------
+choose_tools() {
+  local input="${1:-}"
+  if [[ -z "$input" ]]; then
+    read -r -p "请输入编号（可多选）: " input
+  fi
+  # 归一化：去掉逗号，转小写
+  input="${input//,/ }"
+  local -a tools=()
+  for tok in $input; do
+    case "$tok" in
+      1|opencode) tools+=("opencode") ;;
+      2|claude)   tools+=("claude") ;;
+      3|cursor)   tools+=("cursor") ;;
+    esac
+  done
+  # 去重
+  local result=""
+  for t in "${tools[@]}"; do
+    [[ -z "$t" ]] && continue
+    case " $result " in
+      *" $t "*) continue ;;
+    esac
+    result="$result $t"
+  done
+  result="${result# }"
+  if [[ -z "$result" ]]; then
+    echo "未识别到有效工具，请重新运行 pessoa init。" >&2
+    exit 1
+  fi
+  echo "$result"
+}
+
+choose_scope() {
+  local input="${1:-}"
+  if [[ -z "$input" ]]; then
+    read -r -p "安装范围 [u/p] (默认 u): " input
+  fi
+  case "$input" in
+    p|project) echo "project" ;;
+    *)         echo "user" ;;
+  esac
+}
+
+# ---------------------------------------------------------------------------
+# 生成命令文件（薄包装，调用同名 skill）
+# ---------------------------------------------------------------------------
+write_command() {
+  local cmd_file="$1"
+  local name="$2"
+  local desc="$3"
+  cat > "$cmd_file" <<EOF
+---
+description: $desc
+---
+请使用 $name 技能完成任务。\$ARGUMENTS
+EOF
+}
+
+# ---------------------------------------------------------------------------
+# init 主流程
+# ---------------------------------------------------------------------------
+do_init() {
+  local tool_arg="${1:-}" scope_arg="${2:-}"
+  print_welcome
+  local tools
+  tools="$(choose_tools "$tool_arg")"
+  local scope
+  scope="$(choose_scope "$scope_arg")"
+
+  for tool in $tools; do
+    local rel_skills
+    local rel_cmds
+    rel_skills="$(skills_rel "$tool")"
+    rel_cmds="$(commands_rel "$tool")"
+    local base
+    if [[ "$scope" == "user" ]]; then
+      base="$HOME"
+    else
+      base="$(pwd)"
+    fi
+    local skills_dir="$base/$rel_skills"
+    local cmds_dir="$base/$rel_cmds"
+    local dest="$skills_dir/pessoa"
+
+    echo "==> 安装到 $tool ($scope): $dest"
+    mkdir -p "$dest" "$cmds_dir"
+
+    # 复制框架内容（不含 assets，assets 仅 CLI 用）
+    for d in genre style deai skills; do
+      rm -rf "$dest/$d"
+      cp -R "$FRAMEWORK_DIR/$d" "$dest/$d"
+    done
+
+    # 生成命令文件
+    write_command "$cmds_dir/pessoa-blog.md"    "pessoa-blog"    "使用 pessoa-blog 技能撰写技术博客"
+    write_command "$cmds_dir/pessoa-article.md" "pessoa-article" "使用 pessoa-article 技能撰写技术文章"
+    write_command "$cmds_dir/pessoa-paper.md"   "pessoa-paper"   "使用 pessoa-paper 技能撰写技术论文（arXiv 风）"
+    write_command "$cmds_dir/pessoa-train.md"   "pessoa-train"   "使用 pessoa-train 技能从文章提炼个人写作风格"
+
+    echo "    技能已安装："
+    echo "      - $dest/genre, $dest/style, $dest/deai, $dest/skills"
+    echo "    命令已生成："
+    echo "      - $cmds_dir/pessoa-{blog,article,paper,train}.md"
+    echo
+  done
+
+  echo "✅ pessoa 安装完成。在对应工具中输入 /pessoa-blog 等即可开始写作。"
+  echo "   训练风格：/pessoa-train ；扩展约束：编辑 skills/<type>/pessoa.md ；个人定制：style/custom-myself.md"
+}
+
+# ---------------------------------------------------------------------------
+# help
+# ---------------------------------------------------------------------------
+usage() {
+  cat <<'EOF'
+pessoa — 写作异名框架 CLI
+
+用法：
+  pessoa init                 交互式安装（欢迎界面 → 选工具 → 复制技能 + 生成命令）
+  pessoa init --tool claude --scope user
+  pessoa help                 显示本帮助
+
+参数：
+  --tool <opencode|claude|cursor>   可多次或一次多个（空格分隔需引号）
+  --scope <user|project>            用户级(默认) / 项目级
+
+支持的 Agentic Coding Tool：OpenCode、Claude Code、Cursor
+EOF
+}
+
+# ---------------------------------------------------------------------------
+# 入口
+# ---------------------------------------------------------------------------
+main() {
+  local cmd="${1:-help}"; shift || true
+  case "$cmd" in
+    init)
+      local tool="" scope=""
+      while [[ $# -gt 0 ]]; do
+        case "$1" in
+          --tool)  tool="${2:-}"; shift 2 || true ;;
+          --scope) scope="${2:-}"; shift 2 || true ;;
+          *) shift ;;
+        esac
+      done
+      do_init "$tool" "$scope"
+      ;;
+    help|-h|--help) usage ;;
+    *) echo "未知命令: $cmd" >&2; usage; exit 1 ;;
+  esac
+}
+
+main "$@"
