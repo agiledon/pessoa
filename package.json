@@ -1,7 +1,7 @@
 {
   "name": "pessoa",
   "version": "0.1.0",
-  "description": "pessoa · 写作异名框架 — 中文技术写作技能集合（TypeScript CLI）",
+  "description": "pessoa · 写作技能框架 — 中文技术写作技能集合（TypeScript CLI）",
   "license": "MIT",
   "bin": {
     "pessoa": "dist/index.js"
@@ -10,6 +10,9 @@
     "build": "tsc",
     "dev": "tsx src/index.ts",
     "start": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.7.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

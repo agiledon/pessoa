@@ -45,8 +45,8 @@ description: 写作初稿完成后由写作 skill 强制、对用户不可见地
 - 节奏快慢结合，有变化。
 
 ## 风格联动
-- 若用户选「个人定制」：结合 `../style/custom-myself.md` 的声音 DNA 去 AI。
-- 若用户选某「训练风格」：结合 `../style/writer/custom-*.md` 的 DNA 去 AI。
+- 若用户选「个人定制」：结合 `../style/myself.md` 的声音 DNA 去 AI。
+- 若用户选某「训练风格」：结合 `../style/heteronyms/*.md` 的 DNA 去 AI。
 - 去 AI 后的文字应更贴近该目标声音，而非千篇一律的「去 AI 腔」。
 
 ## 内部检查清单（收尾自核，不输出给用户）
