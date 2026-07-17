@@ -11,6 +11,7 @@
 | 博客 | `pessoa-blog` | 格式自由、长短不拘 |
 | 文章 | `pessoa-article` | 正式严谨、结构完整、风格多样 |
 | 论文 | `pessoa-paper` | 符合 arXiv 预印本标准结构 |
+| 讨论 | `pessoa-discuss` | 与「专家分身」多轮讨论，定稿后再写 |
 
 写作效果由三个因素共同决定：
 
@@ -30,35 +31,42 @@
 
 ## 安装
 
-`pessoa` 是一个 Bash CLI，零依赖（兼容 macOS 自带 bash 3.2）。
+`pessoa` CLI 用 **TypeScript** 实现，运行时零依赖（仅用 Node 内置模块），需 Node ≥ 18。
 
 ```bash
 # 1. 获取仓库
 git clone <repo-url> pessoa
 cd pessoa
 
-# 2. （可选）把 CLI 放到 PATH
+# 2. 安装开发依赖并编译
+npm install
+npm run build          # tsc → dist/
+
+# 3. （可选）把 CLI 放到 PATH
 ln -s "$(pwd)/bin/pessoa" /usr/local/bin/pessoa
 
-# 3. 初始化：选工具 → 自动复制技能 + 生成命令
-pessoa init
+# 4. 初始化：选工具 → 自动复制技能 + 生成命令 + 复制 agents
+./bin/pessoa init
 # 或一步到位：
-pessoa init --tool claude --scope user
+./bin/pessoa init --tool claude --scope user
 ```
+
+> 不想编译也可直接运行源码：`npx tsx src/index.ts init`
 
 `pessoa init` 会先显示**欢迎界面**（左侧钢笔 LOGO），然后让你选择目标工具与安装范围：
 
-| 工具 | 支持 | skills 目录 | commands 目录 |
-| --- | --- | --- | --- |
-| OpenCode | skill + command | `~/.config/opencode/skills/pessoa/` | `~/.config/opencode/command/` |
-| Claude Code | skill + command | `~/.claude/skills/pessoa/` | `~/.claude/commands/` |
-| Cursor | skill + command | `~/.cursor/skills/pessoa/` | `~/.cursor/commands/` |
+| 工具 | 支持 | skills 目录 | commands 目录 | agents 目录 |
+| --- | --- | --- | --- | --- |
+| OpenCode | skill + command + agent | `~/.config/opencode/skills/pessoa/` | `~/.config/opencode/command/` | `~/.config/opencode/agents/` |
+| Claude Code | skill + command + agent | `~/.claude/skills/pessoa/` | `~/.claude/commands/` | `~/.claude/agents/` |
+| Cursor | skill + command + agent | `~/.cursor/skills/pessoa/` | `~/.cursor/commands/` | `~/.cursor/agents/` |
 
 - `--scope user`（默认）：装到用户级 `~/.xxx`，全局可用。
 - `--scope project`：装到当前目录 `.xxx/`，随仓库提交、团队共享。
 - 可一次选择多个工具（如 `1 2 3`）。
 
-安装后，框架整体被复制为 `<工具skills目录>/pessoa/`，包含 `genre/`、`style/`、`deai/`、`skills/`。
+安装后，框架整体被复制为 `<工具skills目录>/pessoa/`，包含 `genre/`、`style/`、`deai/`、`skills/`；
+四个讨论 SubAgent 被复制到 `<工具agents目录>/`。
 
 ---
 
@@ -67,18 +75,27 @@ pessoa init --tool claude --scope user
 在对应工具中输入斜杠命令即可开始：
 
 ```
-/pessoa-blog     写技术博客
-/pessoa-article  写技术文章
-/pessoa-paper    写技术论文（arXiv 风）
-/pessoa-train    从范文提炼写作风格
+/pessoa-blog       写技术博客
+/pessoa-article    写技术文章
+/pessoa-paper      写技术论文（arXiv 风）
+/pessoa-discuss   与专家分身讨论，定稿后再写
+/pessoa-train     从范文提炼写作风格
 ```
 
+### 直接写作（blog / article / paper）
 写作技能会依次引导你：
 1. 提供素材（主题 / 文章 / 链接；链接会问是否联网检索）
 2. **选择文体**（列出 5 项及说明）
 3. **选择文字风格**（列出 6+1 项及说明，外加 `style/writer/` 中的训练风格）
 4. 自动加载本类型 harness 约束
 5. 产出初稿 → **自动去 AI 化** → 终稿
+
+### 讨论写作（pessoa-discuss）
+`/pessoa-discuss` 让你先和 Agent 扮演的「专家分身」把想法聊透：
+- **节奏引导者**：把控讨论节奏、追问、判断何时收束
+- **写作咨询建议者**：从结构 / 清晰度 / 受众 / 切入角给建议
+- **创意设想者**：发散想法、类比、反常识角度
+- 你确认定稿后，**写作落地者**请用户选择 写作类型 + 文体 + 文字风格，再调用对应写作技能落笔成稿。
 
 ---
 
@@ -102,25 +119,42 @@ harness 约束（长度 / 格式 / 必遵规则）。改这里即可调整全局
 - 想新增或微调基础风格：编辑 `framework/style/*.md`（含 `name` + `description` 字段）。
 修改后重新 `pessoa init` 即可生效。
 
+### 5. 讨论分身（SubAgents）
+四个讨论角色定义在 `framework/agents/`（跨工具兼容 frontmatter）。可编辑其正文调整
+各分身的行为；修改后重新 `pessoa init` 生效。
+
 ---
 
 ## 目录结构（仓库）
 
 ```
 pessoa/
-├── bin/pessoa              # CLI（init：欢迎界面+钢笔LOGO → 复制+生成命令）
+├── package.json            # 依赖与 bin
+├── tsconfig.json
+├── bin/pessoa              # node 启动 shim（执行 dist/index.js）
+├── src/                    # TypeScript 源码
+│   ├── index.ts            # 入口与参数解析
+│   ├── install.ts          # 复制框架 + 生成命令 + 复制 agents
+│   ├── tools.ts            # 三工具目录映射
+│   ├── ui.ts               # 欢迎界面与交互
+│   └── logo.ts             # 钢笔 ASCII LOGO
 ├── README.md
 └── framework/
-    ├── assets/logo.sh       # 钢笔 ASCII LOGO
-    ├── genre/               # 5 种文体（含 description）
-    ├── style/               # 6 基础风格 + custom-myself.md（个人定制）
-    │   └── writer/          # 训练产出的风格 custom-<name>.md
-    ├── deai/deai.md         # 强制隐藏的去 AI 化流程
+    ├── genre/              # 5 种文体（含 description）
+    ├── style/              # 6 基础风格 + custom-myself.md（个人定制）
+    │   └── writer/         # 训练产出的风格 custom-<name>.md
+    ├── deai/deai.md        # 强制隐藏的去 AI 化流程
+    ├── agents/             # 4 个讨论 SubAgent 定义
+    │   ├── pessoa-discuss-facilitator.md
+    │   ├── pessoa-discuss-consultant.md
+    │   ├── pessoa-discuss-ideator.md
+    │   └── pessoa-discuss-writer.md
     └── skills/
         ├── pessoa-blog/      # SKILL.md + pessoa.md
         ├── pessoa-article/   # SKILL.md + pessoa.md
         ├── pessoa-paper/     # SKILL.md + pessoa.md
-        └── pessoa-train/     # SKILL.md
+        ├── pessoa-train/     # SKILL.md
+        └── pessoa-discuss/   # SKILL.md
 ```
 
 ## 致谢 / 参考
