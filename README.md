@@ -91,11 +91,13 @@ ln -s "$(pwd)/bin/pessoa" /usr/local/bin/pessoa
 5. 产出初稿 → **自动去 AI 化** → 终稿
 
 ### 讨论写作（pessoa-discuss）
-`/pessoa-discuss` 让你先和 Agent 扮演的「专家分身」把想法聊透：
-- **节奏引导者**：把控讨论节奏、追问、判断何时收束
-- **写作咨询建议者**：从结构 / 清晰度 / 受众 / 切入角给建议
-- **创意设想者**：发散想法、类比、反常识角度
-- 你确认定稿后，**写作落地者**请用户选择 写作类型 + 文体 + 文字风格，再调用对应写作技能落笔成稿。
+`/pessoa-discuss` 让你先和 Agent 扮演的「佩索阿异名分身」把想法聊透。四个分身均以佩索阿的异名为名，
+由主 agent 充当 conductor 在它们之间转递信息（SubAgent 扁平、不能互相派活）：
+
+- **卡埃罗（Caeiro）· 讨论总导演** `pessoa-discuss-caeiro`：界定话题边界与目标、派发任务、全程把控方向与节奏、判断何时收束。
+- **雷斯（Reis）· 研究员** `pessoa-discuss-reis`：把话题拆成可检索面、提炼关键字与 topic，基于自身知识并用 `WebSearch` / `WebFetch` 联网查证，返回带来源引证的简报。
+- **坎波斯（Campos）· 设想者** `pessoa-discuss-campos`：在 Caeiro 划定的边界内发散角度、类比隐喻、反常识 what-if、开篇钩子。
+- **索阿雷斯（Soares）· 写作者** `pessoa-discuss-soares`：定稿后请你选择 写作类型 + 文体 + 文字风格，调用对应写作技能落笔成稿（含强制去 AI 化），并确认保存路径。
 
 ---
 
@@ -144,11 +146,11 @@ pessoa/
     ├── style/              # 6 基础风格 + custom-myself.md（个人定制）
     │   └── writer/         # 训练产出的风格 custom-<name>.md
     ├── deai/deai.md        # 强制隐藏的去 AI 化流程
-    ├── agents/             # 4 个讨论 SubAgent 定义
-    │   ├── pessoa-discuss-facilitator.md
-    │   ├── pessoa-discuss-consultant.md
-    │   ├── pessoa-discuss-ideator.md
-    │   └── pessoa-discuss-writer.md
+    ├── agents/             # 4 个佩索阿异名讨论 SubAgent
+    │   ├── pessoa-discuss-caeiro.md   # 卡埃罗：讨论总导演
+    │   ├── pessoa-discuss-reis.md     # 雷斯：研究员（联网查证）
+    │   ├── pessoa-discuss-campos.md   # 坎波斯：设想者
+    │   └── pessoa-discuss-soares.md   # 索阿雷斯：写作者
     └── skills/
         ├── pessoa-blog/      # SKILL.md + pessoa.md
         ├── pessoa-article/   # SKILL.md + pessoa.md
@@ -158,5 +160,6 @@ pessoa/
 ```
 
 ## 致谢 / 参考
+- 费尔南多·佩索阿（Fernando Pessoa）：他那充满迷梦般的写作与「异名」设定，为本框架的分身机制带来了最初的灵感。
 - 花叔（alchaincyf）的内容创作 Skills：渐进式披露、三遍审校降 AI 味、风格 DNA。
 - 宝玉（JimLiu）的 baoyu-skills：自定义写作风格 Skill（记录口味/做法/忌口）、声音档案。
