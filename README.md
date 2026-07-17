@@ -36,7 +36,18 @@
 
 ## 安装
 
-`pessoa` CLI 用 **TypeScript** 实现，运行时仅依赖 `/prompts`（交互式选择），需 Node ≥ 18。
+`pessoa` CLI 用 **TypeScript** 实现，运行时仅依赖 `@clack/prompts`（交互式选择），需 Node ≥ 18。
+
+### 从 npm 安装（推荐）
+
+```bash
+npm install -g pessoa      # 全局安装 CLI
+pessoa init                # 选工具 → 自动复制技能 + 生成命令 + 复制 agents
+# 或一步到位：
+pessoa init --tool claude --scope user
+```
+
+### 从源码构建
 
 ```bash
 # 1. 获取仓库
@@ -63,7 +74,7 @@ ln -s "$(pwd)/bin/pessoa" /usr/local/bin/pessoa
 
 | 工具 | 支持 | skills 目录 | commands 目录 | agents 目录 |
 | --- | --- | --- | --- | --- |
-| OpenCode | skill + command + agent | `~/.config/opencode/skills/pessoa/` | `~/.config/opencode/command/` | `~/.config/opencode/agents/` |
+| OpenCode | skill + command + agent | `~/.opencode/skills/pessoa/` | `~/.opencode/command/` | `~/.opencode/agents/` |
 | Claude Code | skill + command + agent | `~/.claude/skills/pessoa/` | `~/.claude/commands/` | `~/.claude/agents/` |
 | Cursor | skill + command + agent | `~/.cursor/skills/pessoa/` | `~/.cursor/commands/` | `~/.cursor/agents/` |
 
