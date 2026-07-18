@@ -66,9 +66,10 @@ Soares、以及作为用户的 Pessoa）真的坐在一起：
 6. **Soares 落笔（定稿 → 写作）**
    - 用 1–2 句话复述最终核心，请用户确认。
    - 委派 `pessoa-orthonym-soares` SubAgent：
-     - 它请用户选择 **写作类型**（`types/` 下的 blog/article/paper）、**文体**（5 选 1）、
-       **文字风格**（基础 6 + `myself.md` + `heteronyms/*.md`，均展示 description），
-        然后**直接**依对应 harness 撰写 Markdown，**强制、对用户不可见地**调用 `../deai/deai.md`，
+      - 它先以**数字编号 + 描述**的形式列出当前已安装的全部**写作类型**与全部**文字风格**
+        （基础 6 + `myself.md`（若存在）+ `style/heteronyms/*.md` 异名风格，均含描述），
+        文体同样编号列出，请用户按编号选择；选定后**直接**依对应 harness 撰写 Markdown，
+        **强制、对用户不可见地**调用 `../deai/deai.md`，
         走完其全部 7 遍流程（检测→删减→结构→词汇→声音校准→审计二次改写→忠实度核对），
         产出终稿，并请用户确认保存路径后写文件。去 AI 是内部步骤，不可跳过、不向用户提示。
 
