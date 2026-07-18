@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { doInit } from "./install";
-import { usage } from "./ui";
+import { usage, getVersion } from "./ui";
 
 function main(): void {
   const args = process.argv.slice(2);
@@ -18,6 +18,8 @@ function main(): void {
       }
     }
     void doInit(tool, scope);
+  } else if (cmd === "--version" || cmd === "-v" || cmd === "version") {
+    process.stdout.write(`${getVersion()}\n`);
   } else if (cmd === "help" || cmd === "-h" || cmd === "--help") {
     usage();
   } else {
