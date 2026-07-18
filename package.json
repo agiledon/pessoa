@@ -1,6 +1,6 @@
 {
   "name": "pessoa",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "pessoa · 写作技能框架 — 以费尔南多·佩索阿的异名分身，陪你圆桌讨论并落笔中文技术写作（TypeScript CLI）",
   "license": "MIT",
   "bin": {
